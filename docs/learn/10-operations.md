@@ -23,9 +23,10 @@ last_updated: "2026-10-29"
 
 메모리를 가장 많이 쓰는 순간은 **서버에서 이미지를 빌드할 때**다 (npm ci, 네이티브 모듈 컴파일).
 
-스왑 2GB 추가 (2026-10-29 완료):
+스왑 2GB 추가 (2026-10-29 완료) **[서버]**:
 
 ```sh
+ls /swapfile 2>/dev/null && echo '이미 있음: 아래 명령은 실행하지 않는다'   # 먼저 확인
 sudo fallocate -l 2G /swapfile
 sudo chmod 600 /swapfile
 sudo mkswap /swapfile
@@ -35,7 +36,15 @@ free -h                                                     # Swap: 2.0Gi 확인
 ```
 
 실제 결과: `Swap: 2.0Gi`, `/etc/fstab`에 `/swapfile none swap sw 0 0` 추가 확인. 서비스 재시작은 필요 없었다.
-앞의 `[ -f /swapfile ]` 확인을 넣어 두면 두 번 실행해도 중복으로 만들지 않는다.
+첫 줄에서 `/swapfile`이 이미 보이면 나머지는 실행하지 않는다. 두 번 만들면 `fstab`에 줄이 중복된다.
+
+되돌리기 **[서버]**:
+
+```sh
+sudo swapoff /swapfile
+sudo sed -i '/^\/swapfile/d' /etc/fstab
+sudo rm /swapfile
+```
 
 확인 명령: `free -h`, `docker stats --no-stream`
 

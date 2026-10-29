@@ -94,24 +94,59 @@ pont-coffee.hwiii.com {
 
 ## 5. 실제로 한 일 (2026-10-29)
 
-```sh
-# [맥] 레포의 설정을 서버로 복사
-ssh aws-ubuntu-1 'docker network create proxy; mkdir -p ~/services/_proxy ~/services/hello'
-scp proxy/compose.yml proxy/Caddyfile aws-ubuntu-1:services/_proxy/
+사전 조건: [05](05-domain-dns.md) DNS 완료, 이 레포를 맥에 clone해 둔 상태.
 
-# [서버] 확인용 테스트 사이트 먼저, 그다음 Caddy
-cd ~/services/hello  && docker compose up -d     # nginx:alpine, proxy 네트워크, ports 없음
-cd ~/services/_proxy && docker compose up -d
-docker compose logs -f caddy                     # 인증서 발급 로그
+**1. [맥] 공용 네트워크와 폴더 만들기**
+
+```sh
+ssh aws-ubuntu-1 'docker network create proxy && mkdir -p ~/services/_proxy ~/services/hello'
 ```
 
-처음 Caddyfile에는 테스트용 블록 하나만 넣었다.
+기대 결과: 긴 네트워크 ID 한 줄. `already exists`가 나오면 이미 만든 것이라 괜찮다.
+
+**2. [서버] 테스트 사이트 만들기**: 프록시가 컨테이너까지 연결되는지 확인하려고 띄우는 nginx 기본 페이지다.
+
+```sh
+ssh aws-ubuntu-1
+cat > ~/services/hello/compose.yml <<'EOF'
+services:
+  web:
+    image: nginx:alpine
+    restart: unless-stopped
+    mem_limit: 64m
+    networks:
+      - proxy
+networks:
+  proxy:
+    external: true
+EOF
+cd ~/services/hello && docker compose up -d
+```
+
+기대 결과: `Container hello-web-1 Started`
+
+**3. [맥] Caddy 설정을 서버로 복사** (이 레포 폴더에서 실행)
+
+레포의 [`proxy/Caddyfile`](../../proxy/Caddyfile)에는 테스트용 블록이 들어 있다.
 
 ```
 hello.hwiii.com {
 	reverse_proxy hello-web-1:80
 }
 ```
+
+```sh
+scp proxy/compose.yml proxy/Caddyfile aws-ubuntu-1:services/_proxy/
+```
+
+**4. [서버] Caddy 실행**
+
+```sh
+cd ~/services/_proxy && docker compose up -d
+docker compose logs -f caddy        # Ctrl+C로 빠져나온다
+```
+
+기대 결과: 로그에 `certificate obtained successfully`. 1분 안쪽이면 나온다.
 
 ## 6. 확인
 
@@ -134,11 +169,25 @@ hello.hwiii.com {
 | 443이 막혀 있는데 인증서가 발급됨 | Let's Encrypt HTTP-01 방식은 80 포트로 소유를 확인한다. 80은 열려 있었다 |
 | 로그에 `HTTP/2 skipped because it requires TLS` | 80 포트(HTTP) 서버에 대한 안내다. 443 서버에서는 HTTP/2·3가 켜진다. 오류가 아니다 |
 
-## 8. 사이트 추가하는 법
+## 8. 되돌리기
+
+```sh
+# [서버] 테스트 사이트만 내리기
+cd ~/services/hello && docker compose down && cd .. && rm -r hello
+# → 이 레포 proxy/Caddyfile에서 hello 블록을 지우고, 아래 9장 방법으로 반영
+
+# [서버] 프록시 전체 내리기 (80/443이 닫히고 모든 웹 사이트가 끊긴다)
+cd ~/services/_proxy && docker compose down
+docker network rm proxy             # proxy에 붙은 컨테이너가 없어야 지워진다
+```
+
+`_proxy/data/`(인증서)는 지우지 않으면 다시 올릴 때 재사용된다.
+
+## 9. 사이트 추가하는 법
 
 1. 사이트 컨테이너의 compose에 `networks: [proxy]`(external)를 넣고 `ports:`는 쓰지 않는다.
 2. 이 레포 `proxy/Caddyfile`에 블록 3줄을 추가하고 커밋한다.
-3. 서버에 반영하고 다시 읽어 들인다. 다른 사이트는 멈추지 않는다.
+3. **[맥]** 서버에 반영하고 다시 읽어 들인다. 다른 사이트는 멈추지 않는다.
 
 ```sh
 scp proxy/Caddyfile aws-ubuntu-1:services/_proxy/

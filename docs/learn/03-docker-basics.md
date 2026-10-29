@@ -56,8 +56,10 @@ CMD ["node", "dist/index.js"]
 
 ## 3. 실제로 한 일: 설치
 
+**[맥]** `ssh aws-ubuntu-1`로 접속한 뒤 **[서버]**에서 실행한다.
+
 ```sh
-ssh aws-ubuntu-1
+ssh aws-ubuntu-1                              # [맥]
 curl -fsSL https://get.docker.com | sudo sh   # Docker 공식 설치 스크립트
 sudo usermod -aG docker ubuntu                # sudo 없이 docker 쓰도록 그룹 추가
 exit                                          # 그룹 적용을 위해 재접속
@@ -70,6 +72,8 @@ mkdir -p ~/services                           # 모든 프로젝트를 둘 폴�
 - `docker run --rm hello-world`가 "Hello from Docker!"를 출력하면 성공이다.
 
 ## 4. 확인
+
+**[서버]**
 
 ```sh
 docker --version                 # Docker version 29.8.2 (2026-10-27 확인)

@@ -24,7 +24,7 @@ last_updated: "2026-10-29"
 
 ## 2. 실제로 한 일
 
-[Lightsail 콘솔](https://lightsail.aws.amazon.com) → **Create instance**
+**[콘솔]** [Lightsail 콘솔](https://lightsail.aws.amazon.com) → **Create instance**
 
 | 항목 | 선택 | 이유 |
 |---|---|---|
@@ -35,16 +35,18 @@ last_updated: "2026-10-29"
 
 그다음:
 
-1. 인스턴스 → **Networking** 탭 → **Attach static IP** → 새 고정 IP를 만들어 붙인다.
+1. **[콘솔]** 인스턴스 → **Networking** 탭 → **Attach static IP** → 새 고정 IP를 만들어 붙인다.
    - 붙이지 않으면 재부팅할 때마다 IP가 바뀌어서 도메인 연결이 끊긴다.
    - 인스턴스에 붙어 있는 고정 IP는 무료다. **인스턴스를 지울 때는 고정 IP도 같이 지운다.** 남겨 두면 요금이 나간다.
-2. 계정 페이지에서 SSH 키(`.pem`)를 내려받아 맥의 `~/.ssh/`에 두고 권한을 잠근다.
+2. **[콘솔 → 맥]** 계정 페이지에서 SSH 키(`.pem`)를 내려받아 맥의 `~/.ssh/`에 두고 권한을 잠근다.
    ```sh
    chmod 400 ~/.ssh/<KEY>.pem
    ```
-3. `~/.ssh/config`에 별칭 등록 ([01](01-server-concepts.md#4-ssh-서버에-원격-접속하기) 참고).
+3. **[맥]** `~/.ssh/config`에 별칭 등록 ([01](01-server-concepts.md#4-ssh-서버에-원격-접속하기) 참고).
 
 ## 3. 확인
+
+**[맥]**
 
 ```sh
 ssh aws-ubuntu-1 'hostname; whoami; lsb_release -ds; free -h; df -h /'
@@ -60,7 +62,11 @@ ssh aws-ubuntu-1 'hostname; whoami; lsb_release -ds; free -h; df -h /'
 | 디스크 | 77G 중 7G 사용 |
 | 스왑 | 없음 → [10 운영](10-operations.md)에서 다룬다 |
 
-## 4. 알아둘 것
+## 4. 되돌리기
+
+**[콘솔]** 인스턴스를 지울 때: 인스턴스 → ⋮ → **Delete**. 그다음 **Networking → 고정 IP**도 따로 지운다. 붙어 있지 않은 고정 IP는 요금이 나간다.
+
+## 5. 알아둘 것
 
 - Lightsail 방화벽은 콘솔의 **Networking → IPv4 Firewall**에 있다. 기본으로 22, 80이 열려 있다 → [06 방화벽](06-firewall-ports.md).
 - 서버 IP, `.pem` 파일 이름, 계정 정보는 이 문서와 레포에 쓰지 않는다. `<SERVER_IP>`, `<KEY>`로 표시한다.

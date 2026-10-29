@@ -27,6 +27,8 @@ last_updated: "2026-10-29"
 
 ### 서버 안: 누가 포트를 듣고 있나
 
+**[맥]**
+
 ```sh
 ssh aws-ubuntu-1 'sudo ss -tlnp'
 ```
@@ -35,6 +37,8 @@ ssh aws-ubuntu-1 'sudo ss -tlnp'
 `sudo ufw status` → `inactive`. 서버 안 방화벽은 꺼져 있고, Lightsail 방화벽만 쓰고 있다.
 
 ### 서버 밖(맥)에서: 문이 열려 있나
+
+**[맥]** `<SERVER_IP>` 대신 `hwiii.com`을 써도 된다.
 
 ```sh
 for p in 80 443 8080; do curl -sS -m 5 -o /dev/null http://<SERVER_IP>:$p; done
@@ -60,7 +64,14 @@ systemctl is-active nginx | grep -q active && echo active   # 틀림
 
 ## 3. 443 열기 (2026-10-29 완료)
 
-Lightsail 콘솔 → 인스턴스 → **Networking** → **IPv4 Firewall** → **Add rule** → `HTTPS (TCP 443)`
+**[콘솔: Lightsail]**
+
+1. https://lightsail.aws.amazon.com → 오른쪽 위 리전이 **서울**인지 확인
+2. **인스턴스** → 서버 **이름** 클릭 → **네트워킹** 탭
+3. **IPv4 방화벽** → **+ 규칙 추가**
+4. 애플리케이션 **HTTPS** (프로토콜 TCP, 포트 443 자동), 소스 IP 프리셋 **Anywhere IPv4**, IP 칸에 `0.0.0.0/0` **직접 입력**
+5. **규칙 추가** → 목록에 `HTTPS | TCP | 443`이 보이면 성공. 서버 재시작은 필요 없다
+6. **[맥]** `curl -I https://hello.hwiii.com` → `HTTP/2 200`
 
 - 80은 이미 열려 있다. HTTPS 인증서를 발급받을 때 80도 필요하니 닫지 않는다.
 - 2026-10-29 Caddy를 띄운 뒤: 80은 정상 응답(308 → HTTPS), 443은 여전히 **타임아웃**이다. 서버 안에서 `curl --resolve`로 443에 붙으면 200이 나오므로, 남은 원인은 Lightsail 방화벽뿐이다.
@@ -75,7 +86,11 @@ Lightsail 콘솔 → 인스턴스 → **Networking** → **IPv4 Firewall** → *
 | Caddyfile에 없는 서브도메인 (`nothing.hwiii.com`) | 접속 실패. DNS는 `*`로 서버까지 오지만, Caddy가 그 이름의 인증서를 발급하지 않기 때문이다. 정상 |
 - 참고: 인증서는 443이 막힌 상태에서도 발급됐다. Let's Encrypt의 HTTP-01 방식은 **80 포트로만** 소유를 확인하기 때문이다.
 
-## 4. Docker와 방화벽 주의점
+## 4. 되돌리기
+
+**[콘솔: Lightsail]** 네트워킹 → IPv4 방화벽 → HTTPS 규칙 오른쪽의 **삭제(휴지통)**. 즉시 적용된다. 22번(SSH) 규칙은 지우지 않는다. 지우면 접속이 끊긴다.
+
+## 5. Docker와 방화벽 주의점
 
 - `ports: ["8080:80"]`처럼 공개한 포트는 Docker가 iptables를 직접 고친다. 그래서 **ufw를 켜도 막히지 않는 경우가 있다.**
 - 원칙: 외부 포트는 프록시(80/443)만 연다. 나머지는 `ports:`를 쓰지 않거나 `127.0.0.1:8080:80`처럼 서버 안에서만 접근 가능하게 묶는다.
