@@ -9,7 +9,8 @@ AWS Lightsail 서울 서버 한 대(`aws-ubuntu-1`)에 Docker로 여러 프로�
 - 운영 중: `team-splitter` (디스코드 봇) 1개
 - 도메인: `hwiii.com` (가비아), `*`·`@` A 레코드 연결 완료
 - 프록시: `_proxy`(Caddy) 가동, 인증서 자동 발급 확인. 스왑 2GB 추가
-- 다음 단계: Lightsail 443 열기 → 첫 웹사이트 `pont-coffee`
+- 방화벽: Lightsail 22/80/443 열림, `https://hello.hwiii.com`(테스트)으로 HTTPS 확인
+- 다음 단계: 첫 웹사이트 `pont-coffee`
 
 ## 학습 순서
 
@@ -20,8 +21,8 @@ AWS Lightsail 서울 서버 한 대(`aws-ubuntu-1`)에 Docker로 여러 프로�
 | 03 | [Docker 기초](docs/learn/03-docker-basics.md) | 완료 |
 | 04 | [Docker Compose로 프로젝트 가동](docs/learn/04-docker-compose.md) | 완료 |
 | 05 | [도메인과 DNS](docs/learn/05-domain-dns.md) | 완료 |
-| 06 | [방화벽과 포트](docs/learn/06-firewall-ports.md) | Lightsail 443 열기 예정 |
-| 07 | [리버스 프록시와 HTTPS](docs/learn/07-reverse-proxy-https.md) | 서버 구성 완료 |
+| 06 | [방화벽과 포트](docs/learn/06-firewall-ports.md) | 완료 |
+| 07 | [리버스 프록시와 HTTPS](docs/learn/07-reverse-proxy-https.md) | 완료 |
 | 08 | [Nginx 정적 사이트](docs/learn/08-nginx-static-site.md) | 예정 |
 | 09 | [데이터베이스](docs/learn/09-database.md) | SQLite 운영 중, Postgres 예정 |
 | 10 | [운영](docs/learn/10-operations.md) | 스왑 완료, 나머지 예정 |

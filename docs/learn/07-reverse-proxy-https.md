@@ -10,7 +10,7 @@ last_updated: "2026-10-29"
 # 07 리버스 프록시와 HTTPS·Caddy로 서브도메인마다 다른 사이트 연결
 
 > 학습 시리즈: [06 방화벽](06-firewall-ports.md) → **07** → [08 Nginx 정적 사이트](08-nginx-static-site.md)
-> 상태: **서버 구성 완료 (2026-10-29)**. Lightsail 443을 열면 외부 HTTPS 접속이 된다.
+> 상태: **완료 (2026-10-29)**. 외부에서 `https://hello.hwiii.com` 접속 확인
 
 ## 1. 왜 필요한가
 
@@ -121,7 +121,7 @@ hello.hwiii.com {
 | 인증서 발급 | Caddy 로그 | `certificate obtained successfully` (Let's Encrypt, 2027-01-27 만료, 자동 갱신) |
 | HTTP | 맥에서 `curl -I http://hello.hwiii.com` | `308` → `https://hello.hwiii.com/` 자동 리다이렉트 |
 | HTTPS (서버 안) | `curl --resolve hello.hwiii.com:443:127.0.0.1 https://hello.hwiii.com` | `200`, 인증서 검증 통과, "Welcome to nginx!" |
-| HTTPS (맥) | `curl -I https://hello.hwiii.com` | 타임아웃 → Lightsail 443이 아직 닫힘 ([06](06-firewall-ports.md)) |
+| HTTPS (맥) | `curl -I https://hello.hwiii.com` | 처음엔 타임아웃(Lightsail 443 닫힘) → [06](06-firewall-ports.md)에서 연 뒤 `200`, HTTP/2 |
 | 메모리 | `docker stats --no-stream` | Caddy 13MiB, 테스트 nginx 3MiB |
 
 `--resolve`는 DNS를 거치지 않고 "이 이름은 이 IP"라고 지정해서 접속하는 옵션이다. 방화벽 바깥을 거치지 않고 서버 안에서 HTTPS가 되는지만 확인할 때 쓴다.

@@ -77,8 +77,8 @@ Docker는 `get.docker.com` 스크립트로 설치했고 `ubuntu` 사용자를 do
 | 항목 | 현재 상태 | 영향 |
 |---|---|---|
 | 메모리 | 스왑 2GiB 추가함. team-splitter에는 메모리 제한 없음 | 서비스가 많이 늘면 여전히 빠듯할 수 있음 |
-| 웹 입구 | Caddy 구성 완료. **Lightsail 방화벽 443이 아직 닫혀 있음** | 외부에서 HTTPS 접속 불가 (HTTP는 HTTPS로 리다이렉트됨) |
-| 방화벽 | ufw inactive, Lightsail 방화벽만 사용 | Docker로 공개한 포트는 Lightsail 규칙만으로 막힘 |
+| 웹 입구 | Caddy 구성 완료, Lightsail 22/80/443 열림 (2026-10-29) | 해결됨. 사이트 추가는 Caddyfile에 블록 추가 |
+| 방화벽 | ufw inactive, Lightsail 방화벽(22/80/443)만 사용 | Docker로 공개한 포트는 Lightsail 규칙만으로 막힘 |
 | 로그 기본값 | `/etc/docker/daemon.json` 없음, 회전은 compose별 설정 | 새 프로젝트가 logging 설정을 빠뜨리면 로그가 무제한으로 쌓임 |
 | 빌드 캐시 | 2.86GB (2.46GB는 지워도 됨) | 빌드할 때마다 쌓임 |
 | 비밀값 백업 파일 | `team-splitter/.env.bak-20261027`이 git 추적 밖에 있음 | `.gitignore`에 걸리지 않아 실수로 커밋될 수 있음 |

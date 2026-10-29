@@ -10,7 +10,7 @@ last_updated: "2026-10-29"
 # 06 방화벽과 포트·Lightsail 방화벽, 80/443, ufw, 열린 포트 확인
 
 > 학습 시리즈: [05 도메인·DNS](05-domain-dns.md) → **06** → [07 리버스 프록시](07-reverse-proxy-https.md)
-> 상태: **점검 완료, Lightsail 443 열기는 [예정]** (서버 쪽 Caddy는 준비됨)
+> 상태: **완료 (2026-10-29)**. Lightsail 방화벽에 HTTPS(443) 추가
 
 ## 1. 용어
 
@@ -58,13 +58,21 @@ systemctl is-active nginx | grep -q active && echo active   # 틀림
 
 `inactive`라는 글자 안에도 `active`가 들어 있어서 grep이 걸린 것이다. 출력값 전체를 직접 보거나 `grep -qx active`처럼 줄 전체가 일치하는지 확인해야 한다.
 
-## 3. 해야 할 일 [예정]
+## 3. 443 열기 (2026-10-29 완료)
 
 Lightsail 콘솔 → 인스턴스 → **Networking** → **IPv4 Firewall** → **Add rule** → `HTTPS (TCP 443)`
 
 - 80은 이미 열려 있다. HTTPS 인증서를 발급받을 때 80도 필요하니 닫지 않는다.
 - 2026-10-29 Caddy를 띄운 뒤: 80은 정상 응답(308 → HTTPS), 443은 여전히 **타임아웃**이다. 서버 안에서 `curl --resolve`로 443에 붙으면 200이 나오므로, 남은 원인은 Lightsail 방화벽뿐이다.
-- 열고 나면 맥에서 `curl -I https://hello.hwiii.com`이 200을 돌려준다.
+- 겪은 일: 규칙 추가 창에서 프리셋 **Anywhere IPv4**를 골랐는데 "최소한 소스 IP 주소 하나…를 구성해야 합니다" 오류가 났다. 칸에 보이던 `0.0.0.0/0`은 예시 글씨였고, 값을 직접 입력해야 저장됐다.
+- 연 뒤 맥에서 확인한 결과:
+
+| 확인 | 결과 |
+|---|---|
+| `curl -I https://hello.hwiii.com` | `200`, HTTP/2, 인증서 검증 통과 |
+| 인증서 | `CN=hello.hwiii.com`, 발급자 Let's Encrypt, 2027-01-27 만료 |
+| `http://hello.hwiii.com` | `308` → HTTPS로 이동 |
+| Caddyfile에 없는 서브도메인 (`nothing.hwiii.com`) | 접속 실패. DNS는 `*`로 서버까지 오지만, Caddy가 그 이름의 인증서를 발급하지 않기 때문이다. 정상 |
 - 참고: 인증서는 443이 막힌 상태에서도 발급됐다. Let's Encrypt의 HTTP-01 방식은 **80 포트로만** 소유를 확인하기 때문이다.
 
 ## 4. Docker와 방화벽 주의점
