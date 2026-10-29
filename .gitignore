@@ -1,0 +1,8 @@
+.DS_Store
+.ovis/
+.omc/
+.env
+.env*
+*.pem
+*.key
+__pycache__/
