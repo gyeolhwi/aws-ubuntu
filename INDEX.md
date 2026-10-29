@@ -202,6 +202,9 @@ docs:
   summary: DB 없는 단순 웹사이트를 Nginx 컨테이너로 서빙하는 방법을 빌드 없는 순수 HTML 방식과 Vite 같은 빌드 도구 방식(멀티 스테이지)으로 나눠 설명하고, pont-coffee를 proxy 네트워크에
     붙여 pont-coffee.hwiii.com으로 여는 계획을 정리한다
   keywords:
+  - noindex
+  - X-Robots-Tag
+  - git pull
   - Nginx
   - 정적 사이트
   - static site

@@ -46,7 +46,7 @@ Docker는 `get.docker.com` 스크립트로 설치했고 `ubuntu` 사용자를 do
 /home/ubuntu/
 └── services/                 # 모든 프로젝트를 여기에 둔다
     ├── _proxy/               # Caddy 리버스 프록시. 80/443을 여는 유일한 프로젝트 (설정 원본: 이 레포 proxy/)
-    ├── hello/                # 프록시 연결 확인용 테스트 사이트 (확인 후 삭제 예정)
+    ├── pont-coffee/          # 폰트커피 리뉴얼 시안. nginx, https://pont-coffee.hwiii.com
     ├── team-splitter/        # 디스코드 봇(배근이). GitHub gyeolhwi/team-splitter clone
     │   ├── compose.yml       # 서비스 bot, restart unless-stopped, 로그 10m×3
     │   ├── .env              # 비밀값 (git 제외)
@@ -61,7 +61,7 @@ Docker는 `get.docker.com` 스크립트로 설치했고 `ubuntu` 사용자를 do
 | 종류 | 이름 | 비고 |
 |---|---|---|
 | 컨테이너 | `proxy-caddy-1` | 80, 443(tcp/udp) 공개. `hwiii.com` 서브도메인을 각 컨테이너로 연결 |
-| 컨테이너 | `hello-web-1` | 테스트용 nginx. `hello.hwiii.com` |
+| 컨테이너 | `pont-coffee-web-1` | nginx 정적 사이트. `pont-coffee.hwiii.com` (noindex) |
 | 컨테이너 | `team-splitter-bot-1` | 외부 공개 포트 없음 (디스코드 게이트웨이로 바깥에 연결) |
 | 네트워크 | `proxy` | 직접 만든 공용 네트워크. Caddy와 웹 사이트 컨테이너가 붙는다 |
 | 네트워크 | `team-splitter_default` | compose가 프로젝트별로 자동 생성 |

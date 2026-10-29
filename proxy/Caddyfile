@@ -5,6 +5,8 @@
 #   }
 # reload: docker compose exec -w /etc/caddy caddy caddy reload
 
-hello.hwiii.com {
-	reverse_proxy hello-web-1:80
+# 폰트커피 리뉴얼 시안 (github.com/gyeolhwi/pont-coffee). 검색 노출 차단
+pont-coffee.hwiii.com {
+	header X-Robots-Tag "noindex, nofollow"
+	reverse_proxy pont-coffee-web-1:80
 }

@@ -127,7 +127,7 @@ cd ~/services/hello && docker compose up -d
 
 **3. [맥] Caddy 설정을 서버로 복사** (이 레포 폴더에서 실행)
 
-레포의 [`proxy/Caddyfile`](../../proxy/Caddyfile)에는 테스트용 블록이 들어 있다.
+처음 [`proxy/Caddyfile`](../../proxy/Caddyfile)에는 테스트용 블록 하나만 넣었다. 지금은 [08](08-nginx-static-site.md)에서 pont-coffee로 바꿨다.
 
 ```
 hello.hwiii.com {
