@@ -1,0 +1,25 @@
+# 서버 위치: ~/services/_proxy/compose.yml
+# 80/443을 여는 유일한 프로젝트. 각 사이트는 proxy 네트워크로 연결한다.
+services:
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"   # HTTP/3
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./data:/data      # 발급받은 인증서. 지우면 재발급해야 한다
+      - ./config:/config
+    mem_limit: 128m
+    logging:
+      options:
+        max-size: 10m
+        max-file: "3"
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true

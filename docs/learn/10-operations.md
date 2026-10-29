@@ -10,7 +10,7 @@ last_updated: "2026-10-29"
 # 10 운영·메모리와 스왑, 로그, 빌드 캐시, 업데이트, 백업과 스냅샷
 
 > 학습 시리즈: [09 데이터베이스](09-database.md) → **10** → 다음 작업은 11번부터 이어서 기록한다
-> 상태: **점검 완료, 개선 항목은 [예정]**
+> 상태: **스왑 완료(2026-10-29). 로그 기본값·백업은 [예정]**
 
 ## 1. 메모리와 스왑
 
@@ -23,7 +23,7 @@ last_updated: "2026-10-29"
 
 메모리를 가장 많이 쓰는 순간은 **서버에서 이미지를 빌드할 때**다 (npm ci, 네이티브 모듈 컴파일).
 
-스왑 2GB 추가 [예정]:
+스왑 2GB 추가 (2026-10-29 완료):
 
 ```sh
 sudo fallocate -l 2G /swapfile
@@ -33,6 +33,9 @@ sudo swapon /swapfile
 echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab   # 재부팅 후에도 유지
 free -h                                                     # Swap: 2.0Gi 확인
 ```
+
+실제 결과: `Swap: 2.0Gi`, `/etc/fstab`에 `/swapfile none swap sw 0 0` 추가 확인. 서비스 재시작은 필요 없었다.
+앞의 `[ -f /swapfile ]` 확인을 넣어 두면 두 번 실행해도 중복으로 만들지 않는다.
 
 확인 명령: `free -h`, `docker stats --no-stream`
 

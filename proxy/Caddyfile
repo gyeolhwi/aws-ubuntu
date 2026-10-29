@@ -1,0 +1,10 @@
+# 서버 위치: ~/services/_proxy/Caddyfile
+# 사이트 추가: 아래 형식으로 블록을 추가하고 reload 한다.
+#   <서브도메인>.hwiii.com {
+#       reverse_proxy <컨테이너 이름>:<포트>
+#   }
+# reload: docker compose exec -w /etc/caddy caddy caddy reload
+
+hello.hwiii.com {
+	reverse_proxy hello-web-1:80
+}

@@ -10,7 +10,7 @@ last_updated: "2026-10-29"
 # 07 리버스 프록시와 HTTPS·Caddy로 서브도메인마다 다른 사이트 연결
 
 > 학습 시리즈: [06 방화벽](06-firewall-ports.md) → **07** → [08 Nginx 정적 사이트](08-nginx-static-site.md)
-> 상태: **[예정]** 구조와 방식만 결정했다. 실제로 구성하면 아래 "실제로 한 일"을 채운다.
+> 상태: **서버 구성 완료 (2026-10-29)**. Lightsail 443을 열면 외부 HTTPS 접속이 된다.
 
 ## 1. 왜 필요한가
 
@@ -80,7 +80,7 @@ pont-coffee.hwiii.com {
 ```
 
 - 폴더 이름을 `_proxy`로 한 이유: `ls` 하면 맨 위에 보이고, 서비스가 아니라 기반 시설이라는 게 드러난다.
-- 이 설정 파일들은 서버에만 두지 않고 이 레포에도 보관할 예정이다. 서버가 망가져도 도메인 연결 정보가 남는다.
+- 설정 원본은 이 레포의 [`proxy/`](../../proxy/)에 있다. 서버가 망가져도 도메인 연결 정보가 남는다. 실제 파일에는 HTTP/3용 `443:443/udp`도 열려 있다.
 
 ## 4. 요청 하나가 흘러가는 길
 
@@ -92,26 +92,58 @@ pont-coffee.hwiii.com {
 5. 응답이 같은 길로 돌아감
 ```
 
-## 5. 실제로 한 일 [예정]
-
-예정 순서:
+## 5. 실제로 한 일 (2026-10-29)
 
 ```sh
-ssh aws-ubuntu-1
-docker network create proxy
-mkdir -p ~/services/_proxy && cd ~/services/_proxy
-# compose.yml, Caddyfile 작성 (이 레포의 설정을 복사)
-docker compose up -d
-docker compose logs -f        # 인증서 발급 로그 확인
+# [맥] 레포의 설정을 서버로 복사
+ssh aws-ubuntu-1 'docker network create proxy; mkdir -p ~/services/_proxy ~/services/hello'
+scp proxy/compose.yml proxy/Caddyfile aws-ubuntu-1:services/_proxy/
+
+# [서버] 확인용 테스트 사이트 먼저, 그다음 Caddy
+cd ~/services/hello  && docker compose up -d     # nginx:alpine, proxy 네트워크, ports 없음
+cd ~/services/_proxy && docker compose up -d
+docker compose logs -f caddy                     # 인증서 발급 로그
 ```
 
-사이트를 추가할 때는 Caddyfile에 블록 3줄을 추가하고 다시 읽어 들인다. 다른 사이트는 멈추지 않는다.
+처음 Caddyfile에는 테스트용 블록 하나만 넣었다.
+
+```
+hello.hwiii.com {
+	reverse_proxy hello-web-1:80
+}
+```
+
+## 6. 확인
+
+| 확인 | 명령 | 결과 |
+|---|---|---|
+| 컨테이너 | `docker ps` | `proxy-caddy-1`이 80/443 공개, `hello-web-1`은 공개 포트 없음 |
+| 인증서 발급 | Caddy 로그 | `certificate obtained successfully` (Let's Encrypt, 2027-01-27 만료, 자동 갱신) |
+| HTTP | 맥에서 `curl -I http://hello.hwiii.com` | `308` → `https://hello.hwiii.com/` 자동 리다이렉트 |
+| HTTPS (서버 안) | `curl --resolve hello.hwiii.com:443:127.0.0.1 https://hello.hwiii.com` | `200`, 인증서 검증 통과, "Welcome to nginx!" |
+| HTTPS (맥) | `curl -I https://hello.hwiii.com` | 타임아웃 → Lightsail 443이 아직 닫힘 ([06](06-firewall-ports.md)) |
+| 메모리 | `docker stats --no-stream` | Caddy 13MiB, 테스트 nginx 3MiB |
+
+`--resolve`는 DNS를 거치지 않고 "이 이름은 이 IP"라고 지정해서 접속하는 옵션이다. 방화벽 바깥을 거치지 않고 서버 안에서 HTTPS가 되는지만 확인할 때 쓴다.
+
+## 7. 겪은 일
+
+| 관찰 | 이유 |
+|---|---|
+| 폴더는 `_proxy`인데 컨테이너 이름이 `proxy-caddy-1` | Compose 프로젝트 이름은 영문 소문자나 숫자로 시작해야 해서 앞의 `_`가 빠진다. 공용 네트워크 이름(`proxy`)과 이름이 같지만 서로 다른 것이라 문제는 없다 |
+| 443이 막혀 있는데 인증서가 발급됨 | Let's Encrypt HTTP-01 방식은 80 포트로 소유를 확인한다. 80은 열려 있었다 |
+| 로그에 `HTTP/2 skipped because it requires TLS` | 80 포트(HTTP) 서버에 대한 안내다. 443 서버에서는 HTTP/2·3가 켜진다. 오류가 아니다 |
+
+## 8. 사이트 추가하는 법
+
+1. 사이트 컨테이너의 compose에 `networks: [proxy]`(external)를 넣고 `ports:`는 쓰지 않는다.
+2. 이 레포 `proxy/Caddyfile`에 블록 3줄을 추가하고 커밋한다.
+3. 서버에 반영하고 다시 읽어 들인다. 다른 사이트는 멈추지 않는다.
 
 ```sh
-docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile
+scp proxy/Caddyfile aws-ubuntu-1:services/_proxy/
+ssh aws-ubuntu-1 'cd ~/services/_proxy && docker compose exec -w /etc/caddy caddy caddy reload'
 ```
-
-사전 조건: [05](05-domain-dns.md) DNS 완료, [06](06-firewall-ports.md) 443 열기.
 
 ## 다음
 

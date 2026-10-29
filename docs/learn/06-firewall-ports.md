@@ -10,7 +10,7 @@ last_updated: "2026-10-29"
 # 06 방화벽과 포트·Lightsail 방화벽, 80/443, ufw, 열린 포트 확인
 
 > 학습 시리즈: [05 도메인·DNS](05-domain-dns.md) → **06** → [07 리버스 프록시](07-reverse-proxy-https.md)
-> 상태: **점검 완료, 443 열기는 [예정]**
+> 상태: **점검 완료, Lightsail 443 열기는 [예정]** (서버 쪽 Caddy는 준비됨)
 
 ## 1. 용어
 
@@ -63,7 +63,9 @@ systemctl is-active nginx | grep -q active && echo active   # 틀림
 Lightsail 콘솔 → 인스턴스 → **Networking** → **IPv4 Firewall** → **Add rule** → `HTTPS (TCP 443)`
 
 - 80은 이미 열려 있다. HTTPS 인증서를 발급받을 때 80도 필요하니 닫지 않는다.
-- 열고 나면 위 curl 점검에서 443이 "타임아웃"에서 "연결 거부"로 바뀐다.
+- 2026-10-29 Caddy를 띄운 뒤: 80은 정상 응답(308 → HTTPS), 443은 여전히 **타임아웃**이다. 서버 안에서 `curl --resolve`로 443에 붙으면 200이 나오므로, 남은 원인은 Lightsail 방화벽뿐이다.
+- 열고 나면 맥에서 `curl -I https://hello.hwiii.com`이 200을 돌려준다.
+- 참고: 인증서는 443이 막힌 상태에서도 발급됐다. Let's Encrypt의 HTTP-01 방식은 **80 포트로만** 소유를 확인하기 때문이다.
 
 ## 4. Docker와 방화벽 주의점
 

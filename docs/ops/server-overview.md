@@ -5,7 +5,7 @@ category: ops
 summary: Lightsail 서울 서버 aws-ubuntu-1의 접속 방법, OS·Docker 버전, 메모리·디스크, ~/services 폴더 구조, 실행 중인 컨테이너와 네트워크, 확인된 운영 위험 요소를 정리한다
 keywords: [서버, aws-ubuntu-1, Lightsail, SSH, 접속, 사양, 메모리, 스왑, 디스크, Docker, Docker Compose, services, team-splitter, 컨테이너, 네트워크, 포트, ufw, 방화벽, 로그, daemon.json, 빌드 캐시, 백업]
 related_files: []
-last_updated: "2026-10-27"
+last_updated: "2026-10-29"
 ---
 # 서버 현황·aws-ubuntu-1 사양과 services 구조
 
@@ -33,7 +33,7 @@ ssh aws-ubuntu-1
 | 호스팅 | AWS Lightsail 서울 |
 | OS | Ubuntu 24.04.4 LTS (커널 7.0.0-aws) |
 | CPU | 2 vCPU |
-| 메모리 | 3.7GiB, **스왑 없음** |
+| 메모리 | 3.7GiB + 스왑 2GiB (`/swapfile`, 2026-10-29 추가) |
 | 디스크 | 77G 중 7G 사용 (10%) |
 | Docker | 29.8.2, Compose v5.5.1, `systemctl` enabled (부팅 시 자동 시작) |
 | git | 2.43.0 |
@@ -45,6 +45,8 @@ Docker는 `get.docker.com` 스크립트로 설치했고 `ubuntu` 사용자를 do
 ```text
 /home/ubuntu/
 └── services/                 # 모든 프로젝트를 여기에 둔다
+    ├── _proxy/               # Caddy 리버스 프록시. 80/443을 여는 유일한 프로젝트 (설정 원본: 이 레포 proxy/)
+    ├── hello/                # 프록시 연결 확인용 테스트 사이트 (확인 후 삭제 예정)
     ├── team-splitter/        # 디스코드 봇(배근이). GitHub gyeolhwi/team-splitter clone
     │   ├── compose.yml       # 서비스 bot, restart unless-stopped, 로그 10m×3
     │   ├── .env              # 비밀값 (git 제외)
@@ -58,9 +60,12 @@ Docker는 `get.docker.com` 스크립트로 설치했고 `ubuntu` 사용자를 do
 
 | 종류 | 이름 | 비고 |
 |---|---|---|
+| 컨테이너 | `proxy-caddy-1` | 80, 443(tcp/udp) 공개. `hwiii.com` 서브도메인을 각 컨테이너로 연결 |
+| 컨테이너 | `hello-web-1` | 테스트용 nginx. `hello.hwiii.com` |
 | 컨테이너 | `team-splitter-bot-1` | 외부 공개 포트 없음 (디스코드 게이트웨이로 바깥에 연결) |
+| 네트워크 | `proxy` | 직접 만든 공용 네트워크. Caddy와 웹 사이트 컨테이너가 붙는다 |
 | 네트워크 | `team-splitter_default` | compose가 프로젝트별로 자동 생성 |
-| 호스트 포트 | 22 (sshd) | 그 밖에 127.0.0.1에서만 열린 포트: 53 (systemd-resolved), herdr-web-ui(bun) |
+| 호스트 포트 | 22 (sshd), 80/443 (Caddy) | 그 밖에 127.0.0.1에서만 열린 포트: 53 (systemd-resolved), herdr-web-ui(bun) |
 
 ## 5. 격리 방식
 
@@ -71,8 +76,8 @@ Docker는 `get.docker.com` 스크립트로 설치했고 `ubuntu` 사용자를 do
 
 | 항목 | 현재 상태 | 영향 |
 |---|---|---|
-| 메모리 | 3.7GiB, 스왑 없음, 컨테이너 메모리 제한 없음 | 서버에서 직접 빌드(npm ci, g++)하거나 서비스가 늘면 OOM 위험 |
-| 웹 입구 | 리버스 프록시 없음 | 웹 서비스가 둘 이상 80/443을 쓰면 포트가 충돌 |
+| 메모리 | 스왑 2GiB 추가함. team-splitter에는 메모리 제한 없음 | 서비스가 많이 늘면 여전히 빠듯할 수 있음 |
+| 웹 입구 | Caddy 구성 완료. **Lightsail 방화벽 443이 아직 닫혀 있음** | 외부에서 HTTPS 접속 불가 (HTTP는 HTTPS로 리다이렉트됨) |
 | 방화벽 | ufw inactive, Lightsail 방화벽만 사용 | Docker로 공개한 포트는 Lightsail 규칙만으로 막힘 |
 | 로그 기본값 | `/etc/docker/daemon.json` 없음, 회전은 compose별 설정 | 새 프로젝트가 logging 설정을 빠뜨리면 로그가 무제한으로 쌓임 |
 | 빌드 캐시 | 2.86GB (2.46GB는 지워도 됨) | 빌드할 때마다 쌓임 |

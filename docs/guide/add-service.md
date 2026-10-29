@@ -5,7 +5,7 @@ category: guide
 summary: ~/services에 새 프로젝트를 Docker Compose로 올릴 때 지킬 폴더·이름·비밀값·데이터·로그·포트 규칙과, 서비스가 늘기 전에 서버에 해둘 사전 준비(스왑, 로그 기본값, 리버스 프록시)를 체크리스트로 정리한다
 keywords: [새 서비스, 프로젝트 추가, 배포, services, Docker Compose, compose.yml, 폴더 규칙, 프로젝트 이름, name, .env, data, 볼륨, 로그 회전, logging, mem_limit, 메모리 제한, 포트, 리버스 프록시, Caddy, Traefik, 스왑, daemon.json, builder prune]
 related_files: []
-last_updated: "2026-10-27"
+last_updated: "2026-10-29"
 ---
 # 새 서비스 추가 가이드·services 폴더 규칙과 체크리스트
 
@@ -47,9 +47,9 @@ services:
 
 아직 적용하지 않은 항목이다. 적용하면 [서버 현황](../ops/server-overview.md)의 위험 요소 표를 갱신한다.
 
-- [ ] **스왑 2GB 추가**: 빌드할 때 메모리가 부족하지 않게.
+- [x] **스왑 2GB 추가**: 빌드할 때 메모리가 부족하지 않게. (2026-10-29 완료)
 - [ ] **`/etc/docker/daemon.json` 로그 기본값**: `{"log-driver":"json-file","log-opts":{"max-size":"10m","max-file":"3"}}`. 적용하려면 docker를 재시작해야 하므로 모든 컨테이너가 잠깐 멈춘다.
-- [ ] **리버스 프록시** (웹 서비스가 처음 들어올 때): `~/services/_proxy/`에 Caddy나 Traefik을 두고, 외부 네트워크(예: `proxy`)를 하나 만들어 웹 서비스가 그 네트워크에 붙도록 한다. 80/443은 프록시만 연다. Lightsail 방화벽에서도 80/443을 연다.
+- [x] **리버스 프록시** (2026-10-29 완료, Lightsail 443 열기만 남음): `~/services/_proxy/`에 Caddy나 Traefik을 두고, 외부 네트워크(예: `proxy`)를 하나 만들어 웹 서비스가 그 네트워크에 붙도록 한다. 80/443은 프록시만 연다. Lightsail 방화벽에서도 80/443을 연다.
 - [ ] **빌드 캐시 정리**: 가끔 `docker builder prune` 실행.
 - [ ] **데이터 백업**: Lightsail 자동 스냅샷을 켜거나 `data/`를 주기적으로 복사.
 
@@ -62,4 +62,5 @@ services:
 5. [ ] `docker compose up -d --build`
 6. [ ] `docker compose ps`, `docker compose logs -f --tail 50`으로 확인
 7. [ ] `free -h`로 남은 메모리 확인
-8. [ ] [서버 현황](../ops/server-overview.md)의 폴더 구조·실행 중인 것 표에 추가하고 INDEX 갱신
+8. [ ] 웹 사이트라면: compose에 `networks: [proxy]`(external) 추가, 이 레포 `proxy/Caddyfile`에 블록 추가 → 서버에 scp → `cd ~/services/_proxy && docker compose exec -w /etc/caddy caddy caddy reload`
+9. [ ] [서버 현황](../ops/server-overview.md)의 폴더 구조·실행 중인 것 표에 추가하고 INDEX 갱신
